@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LLM余额查询</string>
+    <string name="add_key">添加API Key</string>
+    <string name="query_balance">查询余额</string>
+    <string name="provider">服务商</string>
+    <string name="api_key">API Key</string>
+    <string name="balance">余额</string>
+    <string name="status">状态</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="no_keys">暂无API Key，点击下方按钮添加</string>
+    <string name="querying">查询中…</string>
+    <string name="query_success">查询成功</string>
+    <string name="query_failed">查询失败</string>
+    <string name="key_hint">请输入API Key</string>
+    <string name="select_provider">选择服务商</string>
+    <string name="settings">设置</string>
+    <string name="server_url">服务器地址</string>
+    <string name="topic">Topic</string>
+    <string name="enable_notifications">启用通知</string>
+    <string name="test_notification">测试通知</string>
+    <string name="language">语言</string>
+    <string name="language_desc">选择应用界面语言</string>
+    <string name="settings_saved">设置已保存</string>
+    <string name="fill_all_fields">请填写所有字段</string>
+    <string name="save_connect">保存并连接</string>
+    <string name="send_test_notification">发送测试通知</string>
+    <string name="how_it_works">💡 工作原理:\n\n此应用通过 WebSocket 连接到您的 ntfy 服务器。当 Claude 完成任务时，Stop hook 会向服务器发送消息，您的手机将即时收到通知。</string>
+    <string name="enable_notifications_desc">当 Claude 完成任务时接收推送通知</string>
+    <string name="language_restart_hint">切换语言后需要重启应用才能完全生效</string>
+    <string name="confirm_delete_title">确认删除</string>
+    <string name="confirm_delete_message">确定要删除这个 API Key 吗？</string>
+    <string name="deleted">已删除</string>
+    <string name="api_key_saved">API Key 已保存</string>
+    <string name="enter_api_key">请输入 API Key</string>
+</resources>

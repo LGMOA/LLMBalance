@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_provider"
+        android:textSize="14sp"
+        android:textColor="@color/on_surface_variant"
+        android:layout_marginBottom="8dp" />
+
+    <Spinner
+        android:id="@+id/spinnerProvider"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@android:drawable/editbox_background"
+        android:padding="12dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="API Key"
+        android:textSize="14sp"
+        android:textColor="@color/on_surface_variant"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/etApiKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/key_hint"
+        android:inputType="textPassword"
+        android:minHeight="48dp"
+        android:padding="12dp"
+        android:background="@android:drawable/editbox_background" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="备注（可选）"
+        android:textSize="14sp"
+        android:textColor="@color/on_surface_variant"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/etLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="如：个人账号、公司账号"
+        android:inputType="text"
+        android:minHeight="48dp"
+        android:padding="12dp"
+        android:background="@android:drawable/editbox_background" />
+
+</LinearLayout>

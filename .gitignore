@@ -1,0 +1,45 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+*.idsig
+
+# Claude local settings
+.claude/
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+release/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file
+local.properties
+
+# IDE files
+*.iml
+.idea/
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Keystore files
+*.jks
+*.keystore

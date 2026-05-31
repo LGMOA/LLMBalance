@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- LLM balance icon: $ sign with brain-like nodes -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,28 C40.745,28 30,38.745 30,52 C30,58.343 32.632,64.057 36.818,68.242 L36.818,68.243 C40.924,72.524 46.704,75.185 53,75.76 L53,82 L55,82 L55,75.8 C61.337,75.226 66.278,72.525 70.313,68.188 L68.9,66.773 C65.212,70.758 60.724,73.212 55,73.74 L55,65 L53,65 L53,73.74 C47.296,73.188 42.232,70.541 38.232,66.541 L38.231,66.54 C34.562,62.695 32.041,57.591 32,52 C32,39.85 41.85,30 54,30 C59.914,30 65.266,32.562 69.024,36.688 L70.438,35.274 C66.332,30.792 60.462,27.912 54,27.584 L54,22 L53,22 L53,27.584 C46.715,27.912 40.741,30.846 36.329,35.521 C32.041,40.092 30,45.84 30,52 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,50 L40,50 C40,46.318 43.935,42 50,42 L50,40 C42.585,40 38,45.232 38,50 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,54 C38,59.25 43.135,63.855 51,64.89 L51,66.95 C44.24,65.84 40,60.58 40,54 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M62,55 C64.654,53.312 66.42,50.681 66.42,47.74 L68.42,47.74 C68.42,51.46 66.151,54.77 62.945,56.821 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M75,42 C75,37.03 70.971,33 66,33 L66,31 C72.065,31 77,35.935 77,42 Z" />
+</vector>
