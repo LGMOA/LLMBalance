@@ -1,5 +1,7 @@
 # LLMBalance
 
+[English](README.md) | [中文](README_zh.md)
+
 An Android app to manage LLM API keys, query account balances, and receive push notifications when Claude completes long-running tasks.
 
 ## Features
