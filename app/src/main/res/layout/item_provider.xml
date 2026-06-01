@@ -79,6 +79,36 @@
             android:layout_marginTop="4dp"
             android:visibility="gone" />
 
+        <TextView
+            android:id="@+id/tvUsageSummary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/on_surface"
+            android:layout_marginTop="4dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/llUsageDetail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="4dp"
+            android:paddingStart="8dp"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnToggleUsage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/view_model_details"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="end"
+            android:visibility="gone" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDelete"
             android:layout_width="wrap_content"

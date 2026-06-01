@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 data class KeyWithBalance(
     val savedKey: SavedKey,
     val balanceResult: QueryResult? = null,
+    val usageResult: QueryResult? = null,
     val isQuerying: Boolean = false
 )
 
@@ -31,9 +32,11 @@ class MainViewModel(private val keyStore: KeyStore) : ViewModel() {
     val error: LiveData<String?> = _error
 
     private var autoQueryJob: Job? = null
+    private var autoQueryCycle = 0
 
     companion object {
         private const val AUTO_QUERY_INTERVAL_MS = 5_000L
+        private const val USAGE_QUERY_CYCLE_INTERVAL = 6  // query usage every 6th cycle (30s)
     }
 
     init {
@@ -62,7 +65,7 @@ class MainViewModel(private val keyStore: KeyStore) : ViewModel() {
         loadKeys()
     }
 
-    private fun queryBalance(keyWithBalance: KeyWithBalance) {
+    private fun queryBalance(keyWithBalance: KeyWithBalance, queryUsageToo: Boolean = false) {
         val index = _keys.value?.indexOfFirst { it.savedKey.id == keyWithBalance.savedKey.id } ?: return
         val updatedList = _keys.value?.toMutableList() ?: return
         updatedList[index] = keyWithBalance.copy(isQuerying = true)
@@ -70,19 +73,40 @@ class MainViewModel(private val keyStore: KeyStore) : ViewModel() {
 
         viewModelScope.launch {
             val provider = Providers.getById(keyWithBalance.savedKey.providerId)
-            val result = withContext(Dispatchers.IO) {
-                if (provider != null) {
-                    BalanceApi.queryBalance(provider, keyWithBalance.savedKey.apiKey)
-                } else {
-                    QueryResult(success = false, errorMessage = "Unknown provider")
+            if (provider == null) {
+                val currentList = _keys.value?.toMutableList() ?: return@launch
+                val currentIndex = currentList.indexOfFirst { it.savedKey.id == keyWithBalance.savedKey.id }
+                if (currentIndex >= 0) {
+                    currentList[currentIndex] = keyWithBalance.copy(
+                        balanceResult = QueryResult(success = false, errorMessage = "Unknown provider"),
+                        isQuerying = false
+                    )
+                    _keys.value = currentList
                 }
+                return@launch
+            }
+
+            // Query balance
+            val balanceResult = withContext(Dispatchers.IO) {
+                BalanceApi.queryBalance(provider, keyWithBalance.savedKey.apiKey)
+            }
+
+            // Query usage if provider supports it and this cycle requests it
+            val usageResult = if (queryUsageToo &&
+                (provider.supportsUsage || provider.supportsModelList)) {
+                withContext(Dispatchers.IO) {
+                    BalanceApi.queryUsage(provider, keyWithBalance.savedKey.apiKey)
+                }
+            } else {
+                keyWithBalance.usageResult  // keep existing usage result
             }
 
             val currentList = _keys.value?.toMutableList() ?: return@launch
             val currentIndex = currentList.indexOfFirst { it.savedKey.id == keyWithBalance.savedKey.id }
             if (currentIndex >= 0) {
                 currentList[currentIndex] = keyWithBalance.copy(
-                    balanceResult = result,
+                    balanceResult = balanceResult,
+                    usageResult = usageResult,
                     isQuerying = false
                 )
                 _keys.value = currentList
@@ -91,9 +115,10 @@ class MainViewModel(private val keyStore: KeyStore) : ViewModel() {
     }
 
     fun queryAll() {
+        val queryUsage = autoQueryCycle % USAGE_QUERY_CYCLE_INTERVAL == 0
         _keys.value?.forEach { key ->
             if (!key.isQuerying) {
-                queryBalance(key)
+                queryBalance(key, queryUsageToo = queryUsage)
             }
         }
     }
@@ -103,6 +128,7 @@ class MainViewModel(private val keyStore: KeyStore) : ViewModel() {
         autoQueryJob = viewModelScope.launch {
             while (isActive) {
                 delay(AUTO_QUERY_INTERVAL_MS)
+                autoQueryCycle++
                 queryAll()
             }
         }

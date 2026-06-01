@@ -5,7 +5,27 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.net.ssl.HttpsURLConnection
+
+data class ModelUsage(
+    val modelName: String,
+    val callCount: Long = 0,
+    val promptTokens: Long = 0,
+    val completionTokens: Long = 0,
+    val totalTokens: Long = 0
+)
+
+data class UsageInfo(
+    val totalPromptTokens: Long = 0,
+    val totalCompletionTokens: Long = 0,
+    val totalTokens: Long = 0,
+    val totalCalls: Long = 0,
+    val modelUsage: List<ModelUsage> = emptyList(),
+    val availableModels: List<String> = emptyList()
+)
 
 data class BalanceResult(
     val isAvailable: Boolean,
@@ -19,6 +39,7 @@ data class BalanceResult(
 data class QueryResult(
     val success: Boolean,
     val balanceResult: BalanceResult? = null,
+    val usageInfo: UsageInfo? = null,
     val errorMessage: String? = null
 )
 
@@ -35,6 +56,128 @@ object BalanceApi {
             "minimax" -> queryMiniMax(provider, apiKey)
             "dashscope" -> queryDashScope(provider, apiKey)
             else -> QueryResult(success = false, errorMessage = "Unknown provider: ${provider.id}")
+        }
+    }
+
+    fun queryUsage(provider: ProviderConfig, apiKey: String): QueryResult {
+        return when {
+            provider.supportsUsage -> {
+                when (provider.id) {
+                    "openai" -> queryOpenAIUsage(provider, apiKey)
+                    else -> queryModelsOnly(provider, apiKey)
+                }
+            }
+            provider.supportsModelList -> queryModelsOnly(provider, apiKey)
+            else -> QueryResult(success = true, usageInfo = UsageInfo())
+        }
+    }
+
+    private fun todayDateStr(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        return sdf.format(Date())
+    }
+
+    private fun extractModelNames(body: String): List<String> {
+        return try {
+            val json = JSONObject(body)
+            val data = json.optJSONArray("data")
+            if (data != null) {
+                (0 until data.length()).mapNotNull { i ->
+                    val obj = data.optJSONObject(i)
+                    if (obj != null) obj.optString("id", "") else null
+                }
+            } else emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // ===== OpenAI Usage =====
+    private fun queryOpenAIUsage(provider: ProviderConfig, apiKey: String): QueryResult {
+        val usageEndpoint = provider.usageEndpoint ?: return QueryResult(
+            success = true, usageInfo = UsageInfo()
+        )
+        val (code, body) = httpGet("${provider.baseUrl}$usageEndpoint?date=${todayDateStr()}", apiKey)
+
+        if (code in 200..299) {
+            return try {
+                val json = JSONObject(body)
+                val data = json.optJSONArray("data")
+                val modelUsages = mutableListOf<ModelUsage>()
+                var totalPrompt = 0L
+                var totalCompletion = 0L
+                var totalTokens = 0L
+                var totalCalls = 0L
+
+                if (data != null) {
+                    for (i in 0 until data.length()) {
+                        val item = data.optJSONObject(i) ?: continue
+                        val modelName = item.optString("snapshot_id",
+                            item.optString("model", "unknown"))
+                        val promptTokens = item.optLong("n_context_tokens_total",
+                            item.optLong("prompt_tokens", 0))
+                        val completionTokens = item.optLong("n_generated_tokens_total",
+                            item.optLong("completion_tokens", 0))
+                        val tokens = promptTokens + completionTokens
+                        val calls = item.optLong("n_requests",
+                            item.optLong("num_model_requests", 0))
+
+                        totalPrompt += promptTokens
+                        totalCompletion += completionTokens
+                        totalTokens += tokens
+                        totalCalls += calls
+
+                        modelUsages.add(ModelUsage(
+                            modelName = modelName,
+                            callCount = calls,
+                            promptTokens = promptTokens,
+                            completionTokens = completionTokens,
+                            totalTokens = tokens
+                        ))
+                    }
+                }
+
+                // Also get available models
+                val availableModels = if (provider.modelsEndpoint != null) {
+                    val (modelCode, modelBody) = httpGet("${provider.baseUrl}${provider.modelsEndpoint}", apiKey)
+                    if (modelCode in 200..299) extractModelNames(modelBody) else emptyList()
+                } else emptyList()
+
+                QueryResult(success = true, usageInfo = UsageInfo(
+                    totalPromptTokens = totalPrompt,
+                    totalCompletionTokens = totalCompletion,
+                    totalTokens = totalTokens,
+                    totalCalls = totalCalls,
+                    modelUsage = modelUsages,
+                    availableModels = availableModels
+                ))
+            } catch (e: Exception) {
+                // Fallback: try model list
+                queryModelsOnly(provider, apiKey)
+            }
+        }
+
+        // Usage API failed (likely 403 - no billing access), fallback to model list
+        if (provider.modelsEndpoint != null) {
+            return queryModelsOnly(provider, apiKey)
+        }
+
+        return QueryResult(success = true, usageInfo = UsageInfo())
+    }
+
+    // ===== Model list only (for providers without usage API) =====
+    private fun queryModelsOnly(provider: ProviderConfig, apiKey: String): QueryResult {
+        val endpoint = provider.modelsEndpoint ?: provider.balanceEndpoint
+        val headerName = provider.authHeaderName
+        val headerPrefix = provider.authHeaderPrefix
+        val urlStr = if (endpoint.startsWith("http")) endpoint else "${provider.baseUrl}$endpoint"
+        val (code, body) = httpGet(urlStr, apiKey, headerName, headerPrefix)
+
+        return if (code in 200..299) {
+            val modelNames = extractModelNames(body)
+            QueryResult(success = true, usageInfo = UsageInfo(availableModels = modelNames))
+        } else {
+            QueryResult(success = true, usageInfo = UsageInfo()) // key invalid but don't error
         }
     }
 
@@ -103,6 +246,7 @@ object BalanceApi {
                 val json = JSONObject(body)
                 val models = json.optJSONArray("data")
                 val modelCount = models?.length() ?: 0
+                val modelNames = extractModelNames(body)
                 QueryResult(success = true, balanceResult = BalanceResult(
                     isAvailable = true,
                     totalBalance = "$modelCount models",
@@ -110,7 +254,7 @@ object BalanceApi {
                     grantedBalance = "",
                     currency = "",
                     rawResponse = body
-                ))
+                ), usageInfo = UsageInfo(availableModels = modelNames))
             } catch (e: Exception) {
                 QueryResult(success = false, errorMessage = "Parse error: ${e.message}")
             }
@@ -180,6 +324,7 @@ object BalanceApi {
                 val json = JSONObject(body)
                 val models = json.optJSONArray("data")
                 val modelCount = models?.length() ?: 0
+                val modelNames = extractModelNames(body)
                 QueryResult(success = true, balanceResult = BalanceResult(
                     isAvailable = true,
                     totalBalance = "$modelCount models",
@@ -187,7 +332,7 @@ object BalanceApi {
                     grantedBalance = "",
                     currency = "",
                     rawResponse = body
-                ))
+                ), usageInfo = UsageInfo(availableModels = modelNames))
             } catch (e: Exception) {
                 QueryResult(success = false, errorMessage = "Parse error: ${e.message}")
             }
@@ -203,6 +348,7 @@ object BalanceApi {
                 val json = JSONObject(body)
                 val models = json.optJSONArray("data")
                 val modelCount = models?.length() ?: 0
+                val modelNames = extractModelNames(body)
                 QueryResult(success = true, balanceResult = BalanceResult(
                     isAvailable = true,
                     totalBalance = "$modelCount models",
@@ -210,7 +356,7 @@ object BalanceApi {
                     grantedBalance = "",
                     currency = "",
                     rawResponse = body
-                ))
+                ), usageInfo = UsageInfo(availableModels = modelNames))
             } catch (e: Exception) {
                 QueryResult(success = false, errorMessage = "Parse error: ${e.message}")
             }
@@ -252,6 +398,7 @@ object BalanceApi {
                 val json = JSONObject(body)
                 val models = json.optJSONArray("data")
                 val modelCount = models?.length() ?: 0
+                val modelNames = extractModelNames(body)
                 QueryResult(success = true, balanceResult = BalanceResult(
                     isAvailable = true,
                     totalBalance = "$modelCount models",
@@ -259,7 +406,7 @@ object BalanceApi {
                     grantedBalance = "",
                     currency = "",
                     rawResponse = body
-                ))
+                ), usageInfo = UsageInfo(availableModels = modelNames))
             } catch (e: Exception) {
                 QueryResult(success = false, errorMessage = "Parse error: ${e.message}")
             }

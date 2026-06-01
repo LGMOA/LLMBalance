@@ -35,4 +35,12 @@
     <string name="deleted">Deleted</string>
     <string name="api_key_saved">API Key saved</string>
     <string name="enter_api_key">Please enter an API Key</string>
+    <string name="total_tokens">Total: %1$s tokens</string>
+    <string name="total_calls">%1$d calls</string>
+    <string name="models_available">%1$d models available</string>
+    <string name="view_model_details">Model details</string>
+    <string name="hide_model_details">Hide details</string>
+    <string name="usage_prompt_tokens">Prompt: %1$s</string>
+    <string name="usage_completion_tokens">Completion: %1$s</string>
+    <string name="usage_model_item">%1$s: %2$s tokens (%3$d calls)</string>
 </resources>

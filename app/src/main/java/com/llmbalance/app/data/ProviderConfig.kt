@@ -8,7 +8,11 @@ data class ProviderConfig(
     val description: String,
     val iconColor: Int = 0xFF1A73E8.toInt(),
     val authHeaderName: String = "Authorization",
-    val authHeaderPrefix: String = "Bearer "
+    val authHeaderPrefix: String = "Bearer ",
+    val usageEndpoint: String? = null,
+    val modelsEndpoint: String? = null,
+    val supportsUsage: Boolean = false,
+    val supportsModelList: Boolean = false
 )
 
 object Providers {
@@ -25,9 +29,13 @@ object Providers {
         id = "openai",
         name = "OpenAI",
         baseUrl = "https://api.openai.com",
-        balanceEndpoint = "/v1/models",  // Validates key + shows available models
-        description = "OpenAI Key 验证 + 模型列表",
-        iconColor = 0xFF10A37F.toInt()
+        balanceEndpoint = "/v1/models",
+        description = "OpenAI Key 验证 + 用量查询",
+        iconColor = 0xFF10A37F.toInt(),
+        usageEndpoint = "/v1/usage",
+        modelsEndpoint = "/v1/models",
+        supportsUsage = true,
+        supportsModelList = true
     )
 
     val ZHIPU = ProviderConfig(
@@ -52,20 +60,24 @@ object Providers {
         id = "anthropic",
         name = "Anthropic (Claude)",
         baseUrl = "https://api.anthropic.com",
-        balanceEndpoint = "/v1/models",  // Validates key
-        description = "Claude Key 验证",
+        balanceEndpoint = "/v1/models",
+        description = "Claude Key 验证 + 模型列表",
         iconColor = 0xFFD97757.toInt(),
         authHeaderName = "x-api-key",
-        authHeaderPrefix = ""
+        authHeaderPrefix = "",
+        modelsEndpoint = "/v1/models",
+        supportsModelList = true
     )
 
     val GROQ = ProviderConfig(
         id = "groq",
         name = "Groq",
         baseUrl = "https://api.groq.com",
-        balanceEndpoint = "/openai/v1/models",  // Validates key
-        description = "Groq Key 验证",
-        iconColor = 0xFFF55036.toInt()
+        balanceEndpoint = "/openai/v1/models",
+        description = "Groq Key 验证 + 模型列表",
+        iconColor = 0xFFF55036.toInt(),
+        modelsEndpoint = "/openai/v1/models",
+        supportsModelList = true
     )
 
     val MINIMAX = ProviderConfig(
@@ -82,8 +94,10 @@ object Providers {
         name = "阿里百炼 (DashScope)",
         baseUrl = "https://dashscope.aliyuncs.com",
         balanceEndpoint = "/compatible-mode/v1/models",
-        description = "阿里百炼 Key 验证",
-        iconColor = 0xFFFF6A00.toInt()
+        description = "阿里百炼 Key 验证 + 模型列表",
+        iconColor = 0xFFFF6A00.toInt(),
+        modelsEndpoint = "/compatible-mode/v1/models",
+        supportsModelList = true
     )
 
     val ALL = listOf(DEEPSEEK, OPENAI, ZHIPU, MOONSHOT, ANTHROPIC, GROQ, MINIMAX, DASHSCOPE)
